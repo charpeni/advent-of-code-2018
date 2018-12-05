@@ -1,0 +1,38 @@
+aliases:
+  - &save-cache-yarn
+    key: v1-yarn-packages-{{ checksum "yarn.lock" }}
+    paths:
+      - ~/.cache/yarn
+      - node_modules/
+  - &restore-cache-yarn
+    name: Restore Yarn Package Cache
+    keys:
+      - v1-yarn-packages-{{ checksum "yarn.lock" }}
+
+defaults: &defaults
+  docker:
+    - image: circleci/node:10
+
+version: 2
+jobs:
+  day_01:
+    <<: *defaults
+    working_directory: ~/advent-of-code/reason/day-01
+    steps:
+      - checkout:
+          path: ~/advent-of-code
+      - restore_cache: *restore-cache-yarn
+      - run:
+          name: Yarn Install
+          command: |
+            yarn install --frozen-lockfile --no-progress --non-interactive --cache-folder ~/.cache/yarn
+      - save_cache: *save-cache-yarn
+      - run:
+          name: Run test
+          command: yarn test
+
+workflows:
+  version: 2
+  tests:
+    jobs:
+      - day_01
